@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grafito"
+version = "0.1.0"
+description = "Editor local de imágenes por instrucciones en lenguaje natural."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "David Silva"}
+]
+keywords = ["image-editing", "diffusion", "instructpix2pix", "local"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "torch==2.2.2",
+    "diffusers==0.27.2",
+    "transformers==4.39.3",
+    "accelerate==0.28.0",
+    "datasets==2.18.0",
+    "peft==0.10.0",
+    "huggingface_hub==0.23.5",
+    "safetensors>=0.4.0",
+    "Pillow>=10.0.0",
+    "numpy>=1.24.0,<2",
+    "tqdm>=4.65.0",
+    "click>=8.1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "ipykernel>=6.29.0",
+    "jupyter>=1.0.0",
+]
+eval = [
+    "lpips>=0.1.4",
+    "scikit-image>=0.22.0",
+    "clip @ git+https://github.com/openai/CLIP.git",
+]
+
+[project.scripts]
+grafito = "grafito.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -40,6 +40,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
   - Tests para `prepare_magicbrush.py` en `tests/test_prepare_magicbrush.py`.
   - Descarga local robusta mediante `huggingface-cli download` como alternativa a `load_dataset` directo.
 - Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.
+- Script de limpieza `scripts/cleanup_artifacts.sh` para liberar espacio de backups y dataset raw una vez procesado.
 
 ### Corregido / aclarado
 

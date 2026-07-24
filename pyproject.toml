@@ -38,6 +38,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+tracking = [
+    "wandb>=0.16.0",
+]
 dev = [
     "pytest>=8.0.0",
     "black>=24.0.0",

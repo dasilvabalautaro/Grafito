@@ -32,9 +32,12 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 - Preparación del dataset MagicBrush:
   - `src/scripts/prepare_magicbrush.py` ahora filtra ejemplos corruptos, redimensiona imágenes y guarda `stats.json`.
   - El dataset procesado se guarda como `DatasetDict` para poder cargarlo desde disco local.
-  - Script de entrenamiento oficial parcheado en `src/scripts/train_instruct_pix2pix.py` para soportar `--dataset_name` con un `DatasetDict` local guardado por `save_to_disk`.
+  - Script de entrenamiento oficial parcheado en `src/scripts/train_instruct_pix2pix.py`:
+  - Soporta `--dataset_name` con un `DatasetDict` local guardado por `save_to_disk`.
+  - El argumento `--validation_image` acepta path local o URL para la imagen de validación.
   - Tests para `prepare_magicbrush.py` en `tests/test_prepare_magicbrush.py`.
   - Descarga local robusta mediante `huggingface-cli download` como alternativa a `load_dataset` directo.
+- Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.
 
 ### Corregido / aclarado
 
@@ -61,4 +64,4 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 ### Pendiente
 
 - Implementar evaluación cuantitativa en `src/scripts/evaluate.py`.
-- Preparar dataset MagicBrush y lanzar primer entrenamiento.
+- Lanzar primer entrenamiento con MagicBrush.

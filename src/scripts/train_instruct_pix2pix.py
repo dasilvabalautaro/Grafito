@@ -130,10 +130,10 @@ def parse_args():
         help="The column of the dataset containing the edit instruction.",
     )
     parser.add_argument(
-        "--val_image_url",
+        "--validation_image",
         type=str,
         default=None,
-        help="URL to the original image that you would like to edit (used during inference for debugging purposes).",
+        help="Path or URL to the original image that you would like to edit (used during inference for debugging purposes).",
     )
     parser.add_argument(
         "--validation_prompt", type=str, default=None, help="A prompt that is sampled during training for inference."
@@ -371,8 +371,11 @@ def convert_to_np(image, resolution):
     return np.array(image).transpose(2, 0, 1)
 
 
-def download_image(url):
-    image = PIL.Image.open(requests.get(url, stream=True).raw)
+def load_validation_image(image_path_or_url):
+    if image_path_or_url.startswith("http://") or image_path_or_url.startswith("https://"):
+        image = PIL.Image.open(requests.get(image_path_or_url, stream=True).raw)
+    else:
+        image = PIL.Image.open(image_path_or_url)
     image = PIL.ImageOps.exif_transpose(image)
     image = image.convert("RGB")
     return image
@@ -918,7 +921,7 @@ def main():
 
         if accelerator.is_main_process:
             if (
-                (args.val_image_url is not None)
+                (args.validation_image is not None)
                 and (args.validation_prompt is not None)
                 and (epoch % args.validation_epochs == 0)
             ):
@@ -945,7 +948,7 @@ def main():
                 pipeline.set_progress_bar_config(disable=True)
 
                 # run inference
-                original_image = download_image(args.val_image_url)
+                original_image = load_validation_image(args.validation_image)
                 edited_images = []
                 with torch.autocast(
                     str(accelerator.device).replace(":0", ""), enabled=accelerator.mixed_precision == "fp16"

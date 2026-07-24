@@ -56,7 +56,10 @@ huggingface-cli download osunlp/MagicBrush --repo-type dataset --local-dir data/
 
 ## Script de entrenamiento
 
-El proyecto incluye el script oficial de Diffusers en `src/scripts/train_instruct_pix2pix.py` con un parche mínimo: detecta si `--dataset_name` apunta a un directorio local con `dataset_dict.json` y lo carga con `load_from_disk`, de forma que el dataset procesado por `prepare_magicbrush.py` sea directamente usable.
+El proyecto incluye el script oficial de Diffusers en `src/scripts/train_instruct_pix2pix.py` con dos parches mínimos:
+
+1. Detecta si `--dataset_name` apunta a un directorio local con `dataset_dict.json` y lo carga con `load_from_disk`, de forma que el dataset procesado por `prepare_magicbrush.py` sea directamente usable.
+2. El argumento `--validation_image` acepta tanto una URL como un path local (por ejemplo `assets/example.jpg`), facilitando la validación sin depender de una imagen externa.
 
 Si prefieres usar el script original de Diffusers, clónalo desde el repositorio oficial y aplica el mismo parche, o guarda el dataset en otro formato compatible con `--train_data_dir`.
 
@@ -100,8 +103,10 @@ Se recomienda añadir:
 
 ```bash
 --report_to=wandb \
---val_image_url="https://hf.co/datasets/diffusers/diffusers-images-docs/resolve/main/mountain.png" \
---validation_prompt="make the mountains snowy"
+--validation_image="assets/example.jpg" \
+--validation_prompt="make it look like a painting" \
+--validation_epochs=1 \
+--num_validation_images=1
 ```
 
 ## Notas

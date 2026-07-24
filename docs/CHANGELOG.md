@@ -35,6 +35,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
   - Script de entrenamiento oficial parcheado en `src/scripts/train_instruct_pix2pix.py`:
   - Soporta `--dataset_name` con un `DatasetDict` local guardado por `save_to_disk`.
   - El argumento `--validation_image` acepta path local o URL para la imagen de validación.
+  - Permite omitir `--seed` sin lanzar un `RuntimeError`.
   - Tests para `prepare_magicbrush.py` en `tests/test_prepare_magicbrush.py`.
   - Descarga local robusta mediante `huggingface-cli download` como alternativa a `load_dataset` directo.
 - Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.

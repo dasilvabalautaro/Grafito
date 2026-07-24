@@ -407,7 +407,9 @@ def main():
         project_config=accelerator_project_config,
     )
 
-    generator = torch.Generator(device=accelerator.device).manual_seed(args.seed)
+    generator = torch.Generator(device=accelerator.device)
+    if args.seed is not None:
+        generator = generator.manual_seed(args.seed)
 
     if args.report_to == "wandb":
         if not is_wandb_available():

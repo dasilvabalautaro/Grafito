@@ -41,6 +41,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
   - Descarga local robusta mediante `huggingface-cli download` como alternativa a `load_dataset` directo.
 - Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.
 - Script de limpieza `scripts/cleanup_artifacts.sh` para liberar espacio de backups y dataset raw una vez procesado.
+- Script de prueba `scripts/test_checkpoint.py` para validar un checkpoint entrenado con una imagen y prompt.
 
 ### Corregido / aclarado
 

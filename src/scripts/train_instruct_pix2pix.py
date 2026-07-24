@@ -466,18 +466,23 @@ def main():
     # then fine-tuned on the custom InstructPix2Pix dataset. This modified UNet is initialized
     # from the pre-trained checkpoints. For the extra channels added to the first layer, they are
     # initialized to zero.
-    logger.info("Initializing the InstructPix2Pix UNet from the pretrained UNet.")
-    in_channels = 8
-    out_channels = unet.conv_in.out_channels
-    unet.register_to_config(in_channels=in_channels)
+    # If the checkpoint already has 8 input channels, it is already an InstructPix2Pix UNet
+    # and we can skip the initialization step.
+    if unet.conv_in.in_channels == 4:
+        logger.info("Initializing the InstructPix2Pix UNet from the pretrained UNet.")
+        in_channels = 8
+        out_channels = unet.conv_in.out_channels
+        unet.register_to_config(in_channels=in_channels)
 
-    with torch.no_grad():
-        new_conv_in = nn.Conv2d(
-            in_channels, out_channels, unet.conv_in.kernel_size, unet.conv_in.stride, unet.conv_in.padding
-        )
-        new_conv_in.weight.zero_()
-        new_conv_in.weight[:, :4, :, :].copy_(unet.conv_in.weight)
-        unet.conv_in = new_conv_in
+        with torch.no_grad():
+            new_conv_in = nn.Conv2d(
+                in_channels, out_channels, unet.conv_in.kernel_size, unet.conv_in.stride, unet.conv_in.padding
+            )
+            new_conv_in.weight.zero_()
+            new_conv_in.weight[:, :4, :, :].copy_(unet.conv_in.weight)
+            unet.conv_in = new_conv_in
+    else:
+        logger.info("UNet already has %d input channels, skipping InstructPix2Pix initialization.", unet.conv_in.in_channels)
 
     # Freeze vae and text_encoder
     vae.requires_grad_(False)

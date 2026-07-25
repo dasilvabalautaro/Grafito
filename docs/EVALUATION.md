@@ -61,6 +61,46 @@ El checkpoint se aprueba si:
 - Mejora o mantiene CLIP similarity.
 - Pasa la mayoría de pruebas cualitativas manuales.
 
+## Resultados — Primer entrenamiento Grafito
+
+Fecha: 2026-07-25
+Checkpoint: `models/checkpoints/grafito-magicbrush`
+Dataset: `osunlp/MagicBrush` validation (528 ejemplos)
+Configuración: 10 000 steps, resolución 256, batch 4, acumulación 4, lr 5e-5.
+
+| Métrica | Checkpoint entrenado | Línea base (`timbrooks/instruct-pix2pix`) | Mejora |
+|---|---|---|---|
+| LPIPS vs target (menor mejor) | 0.1997 | 0.3316 | **+0.1319** (~40% relativo) |
+| CLIP similarity (mayor mejor) | 0.2476 | 0.2591 | -0.0114 (~4% relativo) |
+
+### Interpretación
+
+- **LPIPS mejoró sustancialmente**: el modelo afinado genera imágenes perceptualmente mucho más cercanas al target de MagicBrush.
+- **CLIP se mantuvo casi igual**: ligera pérdida en alineación textual, dentro del margen ruido.
+
+### Fortalezas observadas
+
+El modelo entrenado es especialmente superior en ediciones de **agregar o reemplazar objetos**, por ejemplo:
+
+- "Make the piece of paper hanging on the wall a mirror"
+- "Have there be a dolphin jumping out of the water"
+- "replace the baseball bat for a laser sword"
+- "Change the hat to a cowboy hat"
+
+### Debilidades observadas
+
+El modelo base a veces es más conservador y funciona mejor en cambios sutiles de **color o textura**, por ejemplo:
+
+- "Make it a black sheep"
+- "remove the yellow flowers"
+- "let the cat be white"
+
+### Próximos experimentos
+
+- Probar `conditioning_dropout_prob=0.05` para mejorar fidelidad al prompt.
+- Evaluar con menos steps (5000-7000) para reducir sobre-ediciones en cambios sutiles.
+- Añadir métrica de LPIPS en región no editada usando `mask_img`.
+
 ## Herramientas
 
 - `lpips`

@@ -43,7 +43,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 - Script de limpieza `scripts/cleanup_artifacts.sh` para liberar espacio de backups y dataset raw una vez procesado.
 - Script de prueba `scripts/test_checkpoint.py` para validar un checkpoint entrenado con una imagen y prompt (acepta paths locales o model IDs de Hugging Face).
 - Script de evaluación cuantitativa `src/scripts/evaluate.py` con métricas LPIPS y CLIP score comparando el checkpoint entrenado contra `timbrooks/instruct-pix2pix`.
-- `docs/EVALUATION.md` actualizado con el protocolo y uso de `evaluate.py`.
+- `docs/EVALUATION.md` actualizado con el protocolo, uso de `evaluate.py` y resultados del primer entrenamiento (LPIPS 0.1997 vs 0.3316 de la línea base).
 
 ### Corregido / aclarado
 

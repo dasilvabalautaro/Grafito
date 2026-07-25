@@ -49,8 +49,7 @@ def main() -> None:
     args = parse_args()
 
     checkpoint_path = Path(args.checkpoint)
-    if not checkpoint_path.exists():
-        raise FileNotFoundError(f"Checkpoint no encontrado: {checkpoint_path}")
+    checkpoint_id = str(checkpoint_path) if checkpoint_path.exists() else args.checkpoint
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -58,9 +57,9 @@ def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.float16 if device == "cuda" else torch.float32
 
-    print(f"Cargando checkpoint desde {checkpoint_path}...")
+    print(f"Cargando checkpoint desde {checkpoint_id}...")
     pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(
-        str(checkpoint_path),
+        checkpoint_id,
         torch_dtype=dtype,
         safety_checker=None,
     )

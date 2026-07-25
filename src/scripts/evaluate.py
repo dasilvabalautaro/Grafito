@@ -123,6 +123,11 @@ def main() -> None:
         pred_trained = generate(pipe_trained)
         pred_base = generate(pipe_base)
 
+        # Asegurar mismo tamaño antes de LPIPS
+        target_size = target_image.size
+        pred_trained = pred_trained.resize(target_size, Image.LANCZOS)
+        pred_base = pred_base.resize(target_size, Image.LANCZOS)
+
         # LPIPS vs target
         lpips_trained = lpips_fn(
             pil_to_tensor(pred_trained, device), pil_to_tensor(target_image, device)

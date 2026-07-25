@@ -42,6 +42,8 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 - Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.
 - Script de limpieza `scripts/cleanup_artifacts.sh` para liberar espacio de backups y dataset raw una vez procesado.
 - Script de prueba `scripts/test_checkpoint.py` para validar un checkpoint entrenado con una imagen y prompt (acepta paths locales o model IDs de Hugging Face).
+- Script de evaluación cuantitativa `src/scripts/evaluate.py` con métricas LPIPS y CLIP score comparando el checkpoint entrenado contra `timbrooks/instruct-pix2pix`.
+- `docs/EVALUATION.md` actualizado con el protocolo y uso de `evaluate.py`.
 
 ### Corregido / aclarado
 

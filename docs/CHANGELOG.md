@@ -41,6 +41,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
   - Descarga local robusta mediante `huggingface-cli download` como alternativa a `load_dataset` directo.
 - Dependencia opcional de tracking con `wandb` añadida a `pyproject.toml` (`tracking`) y `requirements.txt`.
 - Script de limpieza `scripts/cleanup_artifacts.sh` para liberar espacio de backups y dataset raw una vez procesado.
+- Plan del siguiente paso en `docs/NEXT_DEMO.md`: demo con Gradio sobre el checkpoint entrenado.
 - Script de prueba `scripts/test_checkpoint.py` para validar un checkpoint entrenado con una imagen y prompt (acepta paths locales o model IDs de Hugging Face).
 - Script de evaluación cuantitativa `src/scripts/evaluate.py` con métricas LPIPS y CLIP score comparando el checkpoint entrenado contra `timbrooks/instruct-pix2pix`.
 - `docs/EVALUATION.md` actualizado con el protocolo, uso de `evaluate.py` y resultados del primer entrenamiento (LPIPS 0.1997 vs 0.3316 de la línea base).

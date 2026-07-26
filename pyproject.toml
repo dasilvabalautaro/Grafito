@@ -38,6 +38,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+demo = [
+    "gradio==4.44.1",
+    "fastapi==0.114.2",
+    "pydantic==2.8.2",
+]
 tracking = [
     "wandb>=0.16.0",
 ]

@@ -2,6 +2,48 @@
 
 Todas las actualizaciones importantes del proyecto se registran aquí.
 
+## [Sin publicar] — 2026-07-26
+
+### Añadido
+
+- `docs/TRAINING_V2_PLAN.md`: plan detallado del segundo entrenamiento. Actualizado el 2026-07-26: fine-tune completo en GPU rentada de 24 GB (una ejecución acotada, presupuesto $20, sin Network Volume) con la restricción de que el modelo final ejecute en el iMac local; mezcla de datos con sobremuestreo de retratos; criterios de éxito medibles frente a v1.
+
+- Demo web `scripts/demo.py` con Gradio 4.44.1: subir imagen, instrucción de edición, parámetros ajustables (pasos, guidance scales, seed), vista original/editada lado a lado y botón de descarga. Usa `models/checkpoints/grafito-magicbrush` si existe; si no, cae a `timbrooks/instruct-pix2pix` con un aviso.
+- Stack del demo fijado en `requirements.txt` y extra `demo` de `pyproject.toml`: `gradio==4.44.1`, `fastapi==0.114.2` (starlette<0.39) y `pydantic==2.8.2`, por compatibilidad con gradio-client 1.3 y el `huggingface_hub` fijado.
+
+### Cambiado
+
+- `docs/NEXT_DEMO.md`: el demo pasa a ejecutarse en hardware local (MPS, Radeon 5500 XT 8 GB) en lugar del pod de Vast.ai, para eliminar el coste de nube. En MPS/CPU se activa `attention_slicing` para reducir el pico de memoria.
+
+### Validado
+
+- Smoke test del demo: `python scripts/demo.py` sirve en local (HTTP 200) y una edición completa vía API (`turn him into a cyborg`, 20 pasos, MPS, seed 42) devuelve la imagen editada correctamente usando el modelo base (el checkpoint aún no está en local).
+- Tests unitarios: 13 passed.
+- Calidad del checkpoint verificada visualmente (`add a hat`, seeds 42 y 123): buena adherencia al prompt y fidelidad; artefactos de borde esporádicos según seed. Observaciones anotadas en `docs/NEXT_DEMO.md` como insumo para la v2.
+
+### Añadido (preparación v2)
+
+- `docs/V2_RUNBOOK.md`: runbook operativo del entrenamiento v2 (fases A/B/C con comandos exactos y criterio de éxito por tarea, hasta la descarga y verificación del modelo).
+- `scripts/audit_dataset.py`: auditoría del dataset procesado (desplazamiento de color, anomalías de borde, cobertura de personas).
+- `src/scripts/prepare_v2_mix.py`: mezcla v2 — sobremuestreo ×2 de ejemplos con personas y filtro de tiras de calibración de color en esquinas (`--drop_corner_strips`, activado por defecto); normaliza el split `dev` a `validation`.
+- `tests/test_prepare_v2_mix.py`: tests de keywords de personas, del mix y del detector de tiras.
+- `docs/TRAINING_V2_PLAN.md`: selección de máquina fijada (imagen `pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime`, GPUs 3090/4090/A10/A100, pre-flight obligatorio) y resultados de la Fase 0 anotados.
+
+### Validado (preparación v2)
+
+- Puerta 0.1: inferencia a 512 px en CPU, 2 min 4 s, sin OOM → resolución objetivo 512 px.
+- Auditoría sobre 8807 ejemplos: el tinte magenta **no** viene del dataset (ΔRGB equilibrado, 0.33 % patrón magenta); 44 imágenes con tira de calibración en esquina (0.50 %) filtradas del mix; personas 15.22 %.
+- Dataset a 512 px generado (train 8807 / dev 528, 9.1 GB) y mix v2 final: **train 10099 / validation 528** (`data/processed/magicbrush_v2/`).
+- Tests unitarios: 19 passed.
+
+### Corregido
+
+- Checkpoint `grafito-magicbrush` restaurado desde Drive: el UNet venía con un nombre no estándar (`diffusion_pytorch_model-001.safetensors`) que diffusers no reconocía; se renombró a `diffusion_pytorch_model.safetensors` y carga correctamente. Verificado con `scripts/test_checkpoint.py` (`add a hat`, 20 pasos, CPU) — resultado en `outputs/test_entrenado.jpg`.
+
+### Pendiente
+
+- Dar de baja el volumen de Vast.ai (el checkpoint ya está verificado en local).
+
 ## [0.1.0] — 2026-07-23
 
 ### Añadido

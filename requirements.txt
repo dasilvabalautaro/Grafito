@@ -15,6 +15,11 @@ tqdm>=4.65.0
 click>=8.1.0
 pyyaml>=6.0
 
+# Demo
+gradio==4.44.1
+fastapi==0.114.2  # trae starlette<0.39; gradio 4.44 no soporta starlette moderno
+pydantic==2.8.2   # gradio-client 1.3 no entiende los schemas de pydantic>=2.10
+
 # Tracking (optional)
 # wandb>=0.16.0
 

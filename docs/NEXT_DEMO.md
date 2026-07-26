@@ -56,9 +56,17 @@ Gradio es la forma más rápida de tener una interfaz profesional en el navegado
 - `scripts/demo.py` (script de desarrollo/demo).
 
 #### Dependencias nuevas
+
+Instaladas y validadas (versiones fijas también en `requirements.txt`):
+
 ```bash
-pip install gradio
+pip install gradio==4.44.1 fastapi==0.114.2 pydantic==2.8.2
 ```
+
+Notas de compatibilidad:
+- `gradio==4.44.1` (última 4.x): la 5.x exigiría subir el `huggingface_hub` fijado.
+- `fastapi==0.114.2` (starlette<0.39): gradio 4.44 usa la API antigua de `TemplateResponse` y con starlette moderno no sirve la página.
+- `pydantic==2.8.2`: gradio-client 1.3 no entiende los JSON schemas de pydantic>=2.10.
 
 ---
 
@@ -83,13 +91,18 @@ El script debe:
 
 ### 3. Ejecutar el demo
 
+El demo corre en hardware local (Mac con MPS; Radeon 5500 XT 8 GB). Ya no se usa el pod de Vast.ai.
+
 ```bash
-cd /workspace/Grafito
+cd Grafito
 source .venv/bin/activate
 python scripts/demo.py
 ```
 
 Gradio abre en `http://127.0.0.1:7860`.
+
+Si el checkpoint aún no está en `models/checkpoints/grafito-magicbrush`, el script
+cae automáticamente al modelo base `timbrooks/instruct-pix2pix` con un aviso en consola.
 
 ### 4. Compartir link temporal (opcional)
 
@@ -104,9 +117,10 @@ Eso genera un link público temporal para mostrar a otros.
 ## Archivos a crear/modificar
 
 1. `scripts/demo.py` — app Gradio.
-2. `docs/CHANGELOG.md` — registrar el demo.
-3. `docs/TRAINING.md` — no cambia.
-4. `docs/EVALUATION.md` — no cambia.
+2. `requirements.txt` / `pyproject.toml` — dependencia `gradio>=4.0,<5.0` (extra `demo`).
+3. `docs/CHANGELOG.md` — registrar el demo.
+4. `docs/TRAINING.md` — no cambia.
+5. `docs/EVALUATION.md` — no cambia.
 
 ---
 
@@ -119,10 +133,38 @@ Eso genera un link público temporal para mostrar a otros.
 
 ---
 
+## Observaciones de calidad (primeras pruebas del checkpoint, 2026-07-26)
+
+Pruebas con `scripts/test_checkpoint.py` sobre `assets/example.jpg`, prompt `add a hat`, 20 pasos, CPU, seeds 42 y 123.
+
+### Lo que ya funciona bien
+
+- **Adherencia al prompt:** el objeto añadido se integra con iluminación y perspectiva coherentes (no parece un parche pegado).
+- **Fidelidad:** pose, fondo y encuadre se conservan bien — coherente con el LPIPS 0.1997 del checkpoint frente a 0.3316 del base.
+
+### Artefactos detectados
+
+- **Manchas de color esporádicas en bordes** (~10 px, tipo paleta cian/magenta): cambian de posición según la seed, no son sistemáticas. Mitigación en demo: re-tirar la seed o recortar 8–10 px de borde.
+- **Reinterpretación de detalles finos** (ej.: pezón → tachuela metálica, pequeños hoyuelos). Visible solo con zoom.
+- **Suavidad general** propia de 256 px, más la compresión JPEG al guardar.
+- **Caras de personas degradadas** (prueba con `foto.jpg`, retrato): la boca se "derrite" y los ojos se distorsionan en todas las variantes probadas. Es el punto débil principal del checkpoint — MagicBrush tiene pocos retratos.
+- **Tinte magenta sistemático** en la foto de retrato (independiente de la seed): apunta a tendencia del checkpoint, no a lotería de seeds.
+- **Prompt específico > subir `image_guidance`:** `add a black hat` dio mejor integración del objeto y mejor preservación de la cara que `add a hat` con `image_guidance_scale` 2.2. Recomendación de uso: prompts con color/atributos concretos.
+
+### Insumos para la v2
+
+- Subir resolución a **512 px**: es la limitación de calidad más evidente.
+- Revisar ejemplos de MagicBrush con bordes anómalos como posible origen de las manchas de borde.
+- Guardar salidas en PNG para no mezclar artefactos de compresión con los del modelo.
+- Evaluar si el tinte magenta en fotos de interior es reproducible con más imágenes; de ser sistemático, revisar balance de color del dataset procesado.
+- Si el caso de uso incluye personas, considerar complementar el entrenamiento con ediciones sobre retratos (el punto débil actual).
+
+---
+
 ## Próximos pasos después del demo
 
 1. Probar el demo con varios prompts e imágenes.
-2. Anotar problemas o artefactos que aparezcan.
+2. Anotar problemas o artefactos que aparezcan (primeras anotaciones en «Observaciones de calidad»).
 3. Con esa información, decidir ajustes para el siguiente entrenamiento:
    - Más/menos steps.
    - Ajustar learning rate.
@@ -134,6 +176,8 @@ Eso genera un link público temporal para mostrar a otros.
 
 ## Notas importantes
 
-- El checkpoint está en `models/checkpoints/grafito-magicbrush` dentro del Network Volume de Vast.ai. Si cambias de máquina, necesitas bajarlo o usar el backup de Drive.
-- El modelo base ya está en caché de Hugging Face en el pod.
+- **Coste cero de nube:** el demo corre 100% en local. El checkpoint ya está restaurado y verificado en local; solo queda destruir la instancia y el volumen de Vast.ai para parar el cobro.
+- El checkpoint `grafito-magicbrush` está en `models/checkpoints/` (local, verificado el 2026-07-26) y respaldado en Google Drive. Nota: en el backup el UNet podría llamarse `diffusion_pytorch_model-001.safetensors`; diffusers necesita `diffusion_pytorch_model.safetensors` (renombrar si se vuelve a restaurar).
+- El modelo base `timbrooks/instruct-pix2pix` ya está en caché local de Hugging Face, así que el demo funciona incluso sin el checkpoint.
+- En MPS se activa `attention_slicing` para caber en los 8 GB de VRAM (baseline validado: ~6 s por imagen a 256 px y 10 pasos).
 - La app Gradio es solo para desarrollo/demo, no es producto final.

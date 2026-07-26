@@ -99,6 +99,9 @@ accelerate launch --mixed_precision="fp16" src/scripts/train_instruct_pix2pix.py
 
 Una vez validado el entrenamiento a 256 px, repetir con `--resolution=512` y posiblemente más pasos.
 
+> Para el segundo entrenamiento (v2) seguir el plan aprobado en `docs/TRAINING_V2_PLAN.md`
+> (GPU rentada de 24 GB, una ejecución acotada; el modelo final ejecuta en el iMac local).
+
 ## Monitoreo
 
 Se recomienda añadir:

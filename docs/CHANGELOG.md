@@ -28,6 +28,7 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 ### Pendiente
 
 - Backup de `grafito-magicbrush-v2` en Google Drive (acción del usuario).
+- Publicación en Hugging Face **pospuesta** (decisión 2026-07-27): primero estabilizar el modelo (uso real del demo + posible v3) antes de hacerlo público.
 
 ## [Sin publicar] — 2026-07-26
 

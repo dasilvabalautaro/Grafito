@@ -21,6 +21,28 @@
 - `src/scripts/evaluate.py` — evaluación cuantitativa LPIPS + CLIP.
 - `scripts/test_checkpoint.py` — prueba rápida de un checkpoint.
 - `scripts/cleanup_artifacts.sh` — limpieza de disco.
+- `assets/test_prompts.json` — prompts de prueba consolidados para smoke tests y panel cualitativo.
+
+#### Prompts de prueba consolidados
+
+El archivo `assets/test_prompts.json` reúne todos los prompts usados en el proyecto:
+
+- **Categoría `demo`**: las 6 plantillas de `scripts/demo.py` (`add a black hat`, `make the background light blue`, etc.).
+- **Categoría `regression`**: `add a hat`, el prompt original de v1 para comparar mejoras.
+- **Categoría `qualitative`**: los 8 casos del panel de `docs/TRAINING_V2_PLAN.md` §6.2 (`make the background blue`, `make it look like a painting`, etc.).
+
+Uso batch con un solo comando:
+
+```bash
+python scripts/test_checkpoint.py \
+  --checkpoint models/checkpoints/grafito-magicbrush-v2 \
+  --image assets/example.jpg \
+  --prompts-file assets/test_prompts.json \
+  --output outputs/batch_test \
+  --resolution 512 --seed 42
+```
+
+Esto genera una imagen por prompt en `outputs/batch_test/`, nombrada con `id`, prompt y seed, facilitando comparaciones manuales o paneles cualitativos.
 
 ### Backup
 - Todo el proyecto (sin `.venv` ni cachés) ya está respaldado en Google Drive.

@@ -12,6 +12,8 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 - `docs/TRAINING_V3_PLAN.md` (borrador): qué supondría v3, con criterio de activación basado en el uso real del demo.
 - Mitigaciones gratuitas del plan v3 en `scripts/demo.py`: multi-variante (1–3 seeds con galería y descarga de la seleccionada), recorte de bordes de 8 px contra manchas de esquina, y plantillas de prompt con atributos concretos. Incluye `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` y `torch.mps.empty_cache()` entre variantes para evitar OOM en MPS.
 - `scripts/api_server.py`: microservicio FastAPI para integrar el modelo en una web (`GET /health`, `POST /edit` con imagen + prompt → PNG). CORS abierto para pruebas, lock de serialización de ediciones, recorte de bordes aplicado. Validado: edición 512 px en MPS ~40 s.
+- `assets/test_prompts.json`: prompts de prueba consolidados (demo, regresión y panel cualitativo) para smoke tests y evaluación manual.
+- `scripts/test_checkpoint.py`: soporta `--prompts-file` para generar un lote de imágenes (uno por prompt) en un directorio de salida, manteniendo el modo `--prompt` simple.
 
 ### Cambiado
 

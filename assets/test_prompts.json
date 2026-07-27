@@ -1,0 +1,83 @@
+{
+    "version": "v2",
+    "description": "Prompts de prueba consolidados para Grafito. Usar con scripts/test_checkpoint.py --prompts-file o copiar en la demo Gradio.",
+    "sources": [
+        "scripts/demo.py::PROMPT_EXAMPLES",
+        "docs/TRAINING_V2_PLAN.md panel cualitativo",
+        "docs/NEXT_DEMO.md observaciones de calidad",
+    ],
+    "notes": "Los prompts con atributos concretos (color, objeto, material) funcionan mejor en v2 que los prompts vagos.",
+    "prompts": [
+        {
+            "id": "demo-hat-black",
+            "category": "demo",
+            "prompt": "add a black hat",
+            "notes": "Plantilla demo. En v2 funciona mejor que el prompt genérico 'add a hat'.",
+        },
+        {"id": "demo-sunglasses", "category": "demo", "prompt": "add a pair of sunglasses"},
+        {
+            "id": "demo-bg-light-blue",
+            "category": "demo",
+            "prompt": "make the background light blue",
+        },
+        {"id": "demo-shirt-red", "category": "demo", "prompt": "turn the shirt red"},
+        {
+            "id": "demo-watercolor",
+            "category": "demo",
+            "prompt": "make it look like a watercolor painting",
+        },
+        {
+            "id": "demo-coffee-tea",
+            "category": "demo",
+            "prompt": "replace the coffee with a cup of tea",
+        },
+        {
+            "id": "regression-hat-generic",
+            "category": "regression",
+            "prompt": "add a hat",
+            "notes": "Prompt usado en v1. Sirve para comparar si v2 mejora la integración.",
+        },
+        {
+            "id": "qual-face-hat",
+            "category": "qualitative",
+            "prompt": "add a black hat",
+            "notes": "Panel cualitativo: retrato tipo foto.jpg, verifica degradación facial.",
+        },
+        {
+            "id": "qual-face-bg-blue",
+            "category": "qualitative",
+            "prompt": "make the background blue",
+            "notes": "Panel cualitativo: fidelidad facial con edición de fondo. Puede teñir ropa si la adherencia es fina.",
+        },
+        {
+            "id": "qual-interior-bright",
+            "category": "qualitative",
+            "prompt": "make the room brighter",
+            "notes": "Panel cualitativo: detector de cast magenta en interiores.",
+        },
+        {
+            "id": "qual-object-red",
+            "category": "qualitative",
+            "prompt": "change the color to red",
+            "notes": "Panel cualitativo: objeto simple, caso típico MagicBrush.",
+        },
+        {
+            "id": "qual-landscape-sunset",
+            "category": "qualitative",
+            "prompt": "make it sunset",
+            "notes": "Panel cualitativo: paisaje / escena amplia.",
+        },
+        {
+            "id": "qual-style-painting",
+            "category": "qualitative",
+            "prompt": "make it look like a painting",
+            "notes": "Panel cualitativo: edición de estilo.",
+        },
+        {
+            "id": "qual-borders-frame",
+            "category": "qualitative",
+            "prompt": "add a frame around the image",
+            "notes": "Panel cualitativo: detector de manchas de borde / esquina.",
+        },
+    ],
+}

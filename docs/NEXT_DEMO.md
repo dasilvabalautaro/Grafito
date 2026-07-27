@@ -75,11 +75,18 @@ Notas de compatibilidad:
 ### 1. Crear `scripts/demo.py`
 
 El script debe:
-- Cargar el pipeline desde `models/checkpoints/grafito-magicbrush`.
+- Cargar el pipeline desde `models/checkpoints/grafito-magicbrush-v2`.
 - Permitir subir imagen y escribir prompt.
 - Aplicar los mismos parámetros de inferencia usados en evaluación.
 - Mostrar original y editada lado a lado.
 - Permitir descargar la imagen editada.
+
+Ya implementado, con además las mitigaciones del plan v3 (2026-07-27):
+
+- **Multi-variante:** 1–3 seeds por edición en galería; clic para seleccionar y descargar la elegida.
+- **Recorte de bordes:** 8 px por lado (conmutable, activo por defecto) contra las manchas de esquina.
+- **Plantillas de prompt** con atributos concretos (mejor adherencia que prompts vagos).
+- Nota MPS: multi-variante requiere `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` (fijado en el script).
 
 ### 2. Parámetros de inferencia recomendados
 

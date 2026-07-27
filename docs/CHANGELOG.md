@@ -2,6 +2,30 @@
 
 Todas las actualizaciones importantes del proyecto se registran aquí.
 
+## [Sin publicar] — 2026-07-27
+
+### Añadido
+
+- Checkpoint v2 `models/checkpoints/grafito-magicbrush-v2` (fine-tune completo a 512 px, 6000 pasos, 4 h 40 min en RTX 4090, mezcla 10099 ejemplos con personas ×2 y 44 tiras de calibración filtradas). **Adoptado para el demo** en sustitución de v1.
+- Resultados v2 en `docs/EVALUATION.md`: LPIPS 0.2405 / CLIP 0.2509 a 512 (base: 0.3208 / 0.2523); panel cualitativo en `outputs/eval_v2/panel/` con caras y tinte magenta resueltos; persisten manchas de esquina esporádicas y adherencia fina irregular.
+- `torchvision==0.17.2` fijado en `requirements.txt` y `pyproject.toml` (dependencia real del script de entrenamiento, detectada en el pre-flight).
+
+### Cambiado
+
+- `scripts/demo.py`: checkpoint por defecto `grafito-magicbrush-v2` a 512 px; en MPS/CPU se activan `attention_slicing` + VAE slicing + VAE tiling (sin tiling, 512 hace OOM en la Radeon de 8 GB; con ellos ~31 s por imagen).
+- `docs/NEXT_DEMO.md`: parámetros de inferencia a 512 y estado de la infraestructura (instancia de Vast.ai destruida el 2026-07-27, coste del run ~$8–12 dentro del techo de $20).
+- `docs/TRAINING_V2_PLAN.md`: checklist cerrado con resultados y desvíos documentados (venv Python 3.11 en el pod, dataset generado en el pod en vez de subirse).
+
+### Validado
+
+- Pre-flight del pod: torch 2.2.2+cu121, pytest 19 verdes, smoke de 5 pasos.
+- Checkpoint v2 carga y edita en local a 512 px tanto en CPU (2 min 4 s) como en MPS (31 s).
+- Tests unitarios: 19 passed.
+
+### Pendiente
+
+- Backup de `grafito-magicbrush-v2` en Google Drive (acción del usuario).
+
 ## [Sin publicar] — 2026-07-26
 
 ### Añadido

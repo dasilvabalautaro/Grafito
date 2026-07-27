@@ -315,17 +315,17 @@ el mismo día que termina.
 
 ---
 
-## 9. Checklist de ejecución
+## 9. Checklist de ejecución (cierre: 2026-07-27)
 
 - [x] 0.1 Puerta de inferencia local superada: 512 px en CPU, 2 min 4 s, sin OOM (2026-07-26). Objetivo: 512.
 - [x] 0.2 Auditoría de dataset anotada (tinte: limpio, 0.33 % patrón magenta; bordes: 44 tiras de calibración en esquinas = 0.50 %, filtradas en el mix; personas: 15.22 %).
-- [ ] 0.3 GPU elegida (3090/4090/A10/A100; evitar Blackwell/50xx), imagen `pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime`, alarma $20, sin Network Volume.
-- [ ] Pre-flight en el pod superado: torch 2.2.2+cu121 detectado, `pytest` verde, smoke de 5 pasos sin errores.
-- [ ] `src/scripts/prepare_v2_mix.py` + test básico en `tests/`.
-- [ ] Dataset v2 generado, verificado (`stats.json`) y subido al pod.
-- [ ] Entrenamiento completado (6000 pasos) y validado por época.
-- [ ] Evaluación cuantitativa y panel cualitativo anotados en `docs/EVALUATION.md`.
-- [ ] Checkpoint ganador en local, carga verificada, inferencia MPS verificada.
-- [ ] Instancia y volumen destruidos el mismo día (confirmado en panel Vast.ai).
-- [ ] Backup del checkpoint en Drive.
-- [ ] Decisión v2 vs v1 documentada en `docs/CHANGELOG.md`.
+- [x] 0.3 GPU: 2× RTX 4090, driver 560, 256 GB disco local, sin Network Volume. Desvío documentado: la imagen disponible traía torch 2.12/py3.12; se mantuvo el pin creando venv con Python 3.11 (vía `uv`) + torch 2.2.2+cu121 de PyPI. Se añadió `torchvision==0.17.2` a requirements (el pre-flight lo detectó).
+- [x] Pre-flight: torch 2.2.2+cu121, `pytest` 19 verdes, smoke de 5 pasos `EXIT_0`.
+- [x] `src/scripts/prepare_v2_mix.py` + tests (`tests/test_prepare_v2_mix.py`).
+- [x] Dataset v2 generado y verificado **en el pod** (stats idénticas a local: train 10099 / validation 528). Desvío: no se subió desde local; la ruta HF del pod estaba capada (~0.5 MB/s) y la subida casera medía 0.45 MB/s; se resolvió con `huggingface-cli download` (8 hilos) + procesado en el pod.
+- [x] Entrenamiento completado: 6000 pasos, **4 h 40 min** (2.80 s/it), `EXIT_0`.
+- [x] Evaluación anotada en `docs/EVALUATION.md`: LPIPS 0.2405 / CLIP 0.2509 a 512; panel 8×2 con caras y tinte resueltos, esquinas residuales.
+- [x] Checkpoint en local (3.6 GB, sin `safety_checker`), carga y edición verificadas a 512 en CPU y en MPS (~31 s con attention slicing + VAE slicing + VAE tiling).
+- [x] Instancia destruida (2026-07-27, confirmado por el usuario). Coste estimado del run: ~$8–12 dentro del techo de $20.
+- [ ] Backup del checkpoint en Drive (acción del usuario).
+- [x] Decisión documentada: **v2 adoptado** para el demo (2026-07-27).

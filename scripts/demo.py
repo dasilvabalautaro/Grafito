@@ -19,11 +19,11 @@ from grafito.config import EditConfig
 from grafito.editor import edit_image, load_pipeline
 from grafito.memory import get_device
 
-DEFAULT_CHECKPOINT = "models/checkpoints/grafito-magicbrush"
+DEFAULT_CHECKPOINT = "models/checkpoints/grafito-magicbrush-v2"
 BASE_MODEL = "timbrooks/instruct-pix2pix"
 
-# Parámetros de inferencia usados en la evaluación (ver docs/NEXT_DEMO.md).
-RESOLUTION = 256
+# Parámetros de inferencia del checkpoint v2 (entrenado a 512 px; ver docs/TRAINING_V2_PLAN.md).
+RESOLUTION = 512
 DEFAULT_STEPS = 20
 DEFAULT_GUIDANCE_SCALE = 7.0
 DEFAULT_IMAGE_GUIDANCE = 1.5
@@ -122,7 +122,10 @@ def main() -> None:
     pipe = load_pipeline(model_id=model_id, device=device)
     if device != "cuda":
         # En MPS/CPU reduce el pico de memoria (Radeon 5500 XT: 8 GB VRAM).
+        # Validado: 512 px en MPS ~31 s con los tres mecanismos activos.
         pipe.enable_attention_slicing()
+        pipe.vae.enable_slicing()
+        pipe.vae.enable_tiling()
     pipe.set_progress_bar_config(disable=True)
 
     demo = build_demo(pipe)

@@ -83,7 +83,7 @@ El script debe:
 
 ### 2. Parámetros de inferencia recomendados
 
-- `resolution`: 256 (misma del entrenamiento).
+- `resolution`: 512 (nativa del checkpoint v2; en MPS requiere `attention_slicing` + VAE slicing + VAE tiling, ya integrados en `scripts/demo.py`; ~31 s por imagen).
 - `num_inference_steps`: 20.
 - `image_guidance_scale`: 1.5.
 - `guidance_scale`: 7.0.
@@ -176,8 +176,8 @@ Pruebas con `scripts/test_checkpoint.py` sobre `assets/example.jpg`, prompt `add
 
 ## Notas importantes
 
-- **Coste cero de nube:** el demo corre 100% en local. El checkpoint ya está restaurado y verificado en local; solo queda destruir la instancia y el volumen de Vast.ai para parar el cobro.
-- El checkpoint `grafito-magicbrush` está en `models/checkpoints/` (local, verificado el 2026-07-26) y respaldado en Google Drive. Nota: en el backup el UNet podría llamarse `diffusion_pytorch_model-001.safetensors`; diffusers necesita `diffusion_pytorch_model.safetensors` (renombrar si se vuelve a restaurar).
-- El modelo base `timbrooks/instruct-pix2pix` ya está en caché local de Hugging Face, así que el demo funciona incluso sin el checkpoint.
-- En MPS se activa `attention_slicing` para caber en los 8 GB de VRAM (baseline validado: ~6 s por imagen a 256 px y 10 pasos).
+- **Coste cero de nube:** el demo corre 100% en local. La instancia de entrenamiento de Vast.ai se destruyó el 2026-07-27; no queda nada facturando.
+- El demo usa por defecto `models/checkpoints/grafito-magicbrush-v2` (adoptado el 2026-07-27; ver resultados en `docs/EVALUATION.md`). v1 se conserva en `models/checkpoints/grafito-magicbrush`.
+- Si el checkpoint aún no está en local, el script cae al modelo base `timbrooks/instruct-pix2pix` (en caché local de Hugging Face) con un aviso en consola.
+- En MPS se activan `attention_slicing` + VAE slicing + VAE tiling para caber en los 8 GB de VRAM (validado a 512 px, ~31 s; 512 px sin tiling hace OOM).
 - La app Gradio es solo para desarrollo/demo, no es producto final.

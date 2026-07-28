@@ -122,11 +122,20 @@ def load_magicbrush(local_dir: Path | None, cache_dir: str | None) -> dict:
     """Carga MagicBrush desde HF o desde un directorio local de parquet."""
     if local_dir is not None and (local_dir / "data").exists():
         data_dir = local_dir / "data"
-        parquet_files = list(data_dir.glob("**/*.parquet"))
-        if parquet_files:
+        # Con subdirectorios por split (data/train/*.parquet, data/dev/*.parquet)
+        # se usa data_files explícito; la inferencia de data_dir no siempre los
+        # resuelve (observado con datasets 2.18 en modo offline).
+        data_files = {
+            split.name: [str(p) for p in sorted(split.glob("*.parquet"))]
+            for split in sorted(data_dir.iterdir())
+            if split.is_dir() and list(split.glob("*.parquet"))
+        }
+        if data_files:
             print(f"Cargando MagicBrush desde archivos locales en {data_dir}...")
-            ds = load_dataset("parquet", data_dir=str(data_dir), cache_dir=cache_dir)
-            return ds
+            return load_dataset("parquet", data_files=data_files, cache_dir=cache_dir)
+        if list(data_dir.glob("*.parquet")):
+            print(f"Cargando MagicBrush desde archivos locales en {data_dir}...")
+            return load_dataset("parquet", data_dir=str(data_dir), cache_dir=cache_dir)
 
     print("Descargando MagicBrush (osunlp/MagicBrush)...")
     return load_dataset("osunlp/MagicBrush", cache_dir=cache_dir)

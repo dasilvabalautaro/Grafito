@@ -57,7 +57,7 @@ dev = [
 eval = [
     "lpips>=0.1.4",
     "scikit-image>=0.22.0",
-    "clip @ git+https://github.com/openai/CLIP.git",
+    "opencv-python<4.10",
 ]
 
 [project.scripts]

@@ -24,10 +24,10 @@ pydantic==2.8.2   # gradio-client 1.3 no entiende los schemas de pydantic>=2.10
 # Tracking (optional)
 # wandb>=0.16.0
 
-# Evaluation (optional)
-# lpips>=0.1.4
-# scikit-image>=0.22.0
-# clip @ git+https://github.com/openai/CLIP.git
+# Evaluation / v3 data filtering (optional)
+lpips>=0.1.4
+scikit-image>=0.22.0
+opencv-python<4.10  # filtro facial en prepare_instruct_celeba y prepare_v3_mix
 
 # Dev (optional)
 # pytest>=8.0.0

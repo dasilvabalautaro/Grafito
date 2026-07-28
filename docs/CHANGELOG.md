@@ -6,10 +6,15 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 
 ### Añadido
 
+- Dataset v3 preparado y verificado en `data/processed/magicbrush_v3/`: **27.098 train / 528 validation**. Compuesto por MagicBrush filtrado (7.645 ejemplos tras filtros, con personas ×2) + Instruct-CelebA submuestreado (19.453 ejemplos).
+- `src/scripts/prepare_instruct_celeba.py`: descarga, empareja y submuestra Instruct-CelebA con originales de CelebAMask-HQ (`v-xchen-v/celebamask_hq`), filtro facial opcional y submuestreo estratificado a ~20k.
+- `src/scripts/filter_noisy_pairs.py`: filtra pares ruidosos de MagicBrush con LPIPS (cambio visual nulo), CLIP (adherencia al prompt) y prompts genéricos.
+- `src/scripts/prepare_v3_mix.py`: construye la mezcla v3 aplicando filtro de tiras de esquina, filtro de calidad facial, sobremuestreo de personas ×2 y concatenación con Instruct-CelebA.
+- Tests para los nuevos scripts: `tests/test_prepare_instruct_celeba.py` y `tests/test_prepare_v3_mix.py`.
 - Checkpoint v2 `models/checkpoints/grafito-magicbrush-v2` (fine-tune completo a 512 px, 6000 pasos, 4 h 40 min en RTX 4090, mezcla 10099 ejemplos con personas ×2 y 44 tiras de calibración filtradas). **Adoptado para el demo** en sustitución de v1.
 - Resultados v2 en `docs/EVALUATION.md`: LPIPS 0.2405 / CLIP 0.2509 a 512 (base: 0.3208 / 0.2523); panel cualitativo en `outputs/eval_v2/panel/` con caras y tinte magenta resueltos; persisten manchas de esquina esporádicas y adherencia fina irregular.
 - `torchvision==0.17.2` fijado en `requirements.txt` y `pyproject.toml` (dependencia real del script de entrenamiento, detectada en el pre-flight).
-- `docs/TRAINING_V3_PLAN.md` (borrador): qué supondría v3, con criterio de activación basado en el uso real del demo.
+- `docs/TRAINING_V3_PLAN.md`: plan detallado del tercer entrenamiento, reescrito tras confirmar fallos catastróficos de v2 en `review/` (`remove his glasses` y `replace the red cap with a blue beanie` destruyen la cara). Incluye boost facial ×3 sobre acciones remove/replace/change, filtro de calidad facial, 10000 pasos desde v2 y criterio de adopción obligatorio sobre el panel de retratos.
 - Mitigaciones gratuitas del plan v3 en `scripts/demo.py`: multi-variante (1–3 seeds con galería y descarga de la seleccionada), recorte de bordes de 8 px contra manchas de esquina, y plantillas de prompt con atributos concretos. Incluye `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` y `torch.mps.empty_cache()` entre variantes para evitar OOM en MPS.
 - `scripts/api_server.py`: microservicio FastAPI para integrar el modelo en una web (`GET /health`, `POST /edit` con imagen + prompt → PNG). CORS abierto para pruebas, lock de serialización de ediciones, recorte de bordes aplicado. Validado: edición 512 px en MPS ~40 s.
 - `assets/test_prompts.json`: prompts de prueba consolidados (demo, regresión y panel cualitativo) para smoke tests y evaluación manual.
@@ -21,12 +26,20 @@ Todas las actualizaciones importantes del proyecto se registran aquí.
 - `docs/NEXT_DEMO.md`: parámetros de inferencia a 512, estado de la infraestructura (instancia de Vast.ai destruida el 2026-07-27, coste del run ~$8–12 dentro del techo de $20) y nuevas funciones del demo.
 - `docs/TRAINING_V2_PLAN.md`: checklist cerrado con resultados y desvíos documentados (venv Python 3.11 en el pod, dataset generado en el pod en vez de subirse).
 
+### Corregido
+
+- `src/scripts/prepare_instruct_celeba.py`: reescrito para evitar OOM y parones de `Dataset.from_generator`. Ahora cachea los originales necesarios desde Hugging Face en un directorio local (con reutilización) y procesa la construcción del dataset en shards de 1000 ejemplos.
+- `src/scripts/filter_noisy_pairs.py`: redimensiona `edited_image` al tamaño de `original_image` antes de LPIPS para evitar error de tensores de feature maps distintos (MagicBrush tiene pares 500×500 vs 512×512).
+- `src/scripts/prepare_v3_mix.py`: umbrales del detector de tiras de esquina ajustados a los valores heredados de v2 (`corner_px=32`, `sat>0.8`, `min_pixels=20`, `min_dispersion>0.15`) para no descartar el 99 % de MagicBrush como falsos positivos.
+- `src/scripts/prepare_v3_mix.py`: lógica del filtro facial corregida para conservar ejemplos sin cara (casos no faciales) y descartar solo cuando la cara desaparece entre original y editada.
+
 ### Validado
 
 - Pre-flight del pod: torch 2.2.2+cu121, pytest 19 verdes, smoke de 5 pasos.
+- Dataset v3 verificado: carga desde disco, columnas correctas, imágenes a 512×512 (salvo pares legítimos 500×500 en MagicBrush), validation idéntico a v1/v2 (528 ejemplos).
 - Checkpoint v2 carga y edita en local a 512 px tanto en CPU (2 min 4 s) como en MPS (31 s).
 - Smoke test del demo con mitigaciones: 2 variantes a 512 px en MPS sin OOM (~31 s cada una), recorte aplicado (salida 496×496), descarga funcional.
-- Tests unitarios: 19 passed.
+- Tests unitarios: 29 passed.
 
 ### Pendiente
 

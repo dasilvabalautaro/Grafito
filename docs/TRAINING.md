@@ -99,8 +99,9 @@ accelerate launch --mixed_precision="fp16" src/scripts/train_instruct_pix2pix.py
 
 Una vez validado el entrenamiento a 256 px, repetir con `--resolution=512` y posiblemente más pasos.
 
-> Para el segundo entrenamiento (v2) seguir el plan aprobado en `docs/TRAINING_V2_PLAN.md`
-> (GPU rentada de 24 GB, una ejecución acotada; el modelo final ejecuta en el iMac local).
+> Para el segundo entrenamiento (v2) seguir `docs/V2_RUNBOOK.md` y el plan aprobado en `docs/TRAINING_V2_PLAN.md`.
+> Para el tercer entrenamiento (v3) seguir `docs/V3_RUNBOOK.md` y el plan aprobado en `docs/TRAINING_V3_PLAN.md`.
+> El dataset v3 ya está preparado en `data/processed/magicbrush_v3/` (27.098 train / 528 validation).
 
 ## Monitoreo
 

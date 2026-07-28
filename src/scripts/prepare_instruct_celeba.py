@@ -662,8 +662,8 @@ def main() -> None:
     # 1. Localizar y extraer
     extract_dir = zip_dir / "extracted"
     try:
-        _find_instruct_dataset_root(extract_dir)
-        extraction_exists = True
+        root = _find_instruct_dataset_root(extract_dir)
+        extraction_exists = (root / "train").is_dir()
     except FileNotFoundError:
         extraction_exists = False
 

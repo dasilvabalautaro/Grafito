@@ -122,7 +122,7 @@ def load_magicbrush(local_dir: Path | None, cache_dir: str | None) -> dict:
     """Carga MagicBrush desde HF o desde un directorio local de parquet."""
     if local_dir is not None and (local_dir / "data").exists():
         data_dir = local_dir / "data"
-        parquet_files = list(data_dir.glob("*.parquet"))
+        parquet_files = list(data_dir.glob("**/*.parquet"))
         if parquet_files:
             print(f"Cargando MagicBrush desde archivos locales en {data_dir}...")
             ds = load_dataset("parquet", data_dir=str(data_dir), cache_dir=cache_dir)

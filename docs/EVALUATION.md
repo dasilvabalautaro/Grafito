@@ -128,6 +128,37 @@ Referencia cruzada (resoluciones distintas, comparabilidad limitada): v1 a 256 o
 
 v2 adoptado para el demo (2026-07-27). Cumple los objetivos prioritarios del plan (caras, tinte, nitidez) sin regresión de CLIP. La meta estricta de LPIPS ≤ 0.18 no se alcanzó; la comparación con v1 queda confundida por el cambio de resolución (v1 a 512 nunca se midió).
 
+## Resultados — Tercer entrenamiento (v3)
+
+Fecha: 2026-07-28
+Checkpoint: `models/checkpoints/grafito-magicbrush-v3` (**no adoptado** — rollback a v2)
+Dataset: MagicBrush dev (528 ejemplos, mismo split que v1/v2)
+Configuración: 10000 steps a 512 px, batch 2, acumulación 8, lr 5e-5, `conditioning_dropout_prob=0.1`, mezcla v3 de 27098 ejemplos (MagicBrush filtrado 7407 + Instruct-CelebA 19453 + sobremuestreo ×2 de personas). 7 h 11 min en RTX 4090 (Vast.ai).
+
+### Métricas a 512 px (los tres modelos en la misma corrida)
+
+| Métrica | v3 | v2 | Base |
+|---|---|---|---|
+| LPIPS vs target (menor mejor) | **0.2329** | 0.2405 | 0.3046 |
+| CLIP similarity (mayor mejor) | 0.2511 | 0.2509 | 0.2512 |
+
+v3 mejora el LPIPS de v2 (+0.0076, ~3% relativo) y mantiene CLIP, pero no alcanza la meta estricta ≤ 0.18.
+
+### Panel cualitativo (6 casos × 2 seeds, `outputs/panel_v3/`)
+
+- `remove his glasses` (retrato real con gafas): **❌ 0/2** — sustituye la escena entera por personas distintas. El fallo crítico de v2 no se corrige.
+- `make the background light blue` (retrato): **❌ 0/2** — elimina al sujeto por completo. **Regresión** frente a v2, que cambiaba fondos preservando al sujeto.
+- `make his jacket bright yellow`: ✅ 2/2 — rostro, gafas, gorro y fondo intactos.
+- `add a black hat` (retrato): ✅ 2/2.
+- Estatua `add a hat`: ✅ 2/2.
+- Estatua `make it look like a painting`: parcial — estatua preservada pero el estilo no se aplica (limitación conocida).
+
+### Decisión
+
+**Rollback a v2 (2026-07-28), conforme a `docs/TRAINING_V3_PLAN.md` §10.2.** Fallan dos condiciones de adopción: el panel quitar/reemplazar en retratos no llega a 4/5 y LPIPS ≤ 0.18 tampoco se cumple. Además v3 regresa en cambios de fondo con personas, un punto fuerte de v2. v2 sigue siendo el motor de producción del demo; v3 se conserva en `models/checkpoints/grafito-magicbrush-v3` solo como referencia.
+
+Lección para un eventual v4: Instruct-CelebA no corrigió la eliminación de objetos, y los smokes intermedios sugieren sobre-ajuste con los pasos — en checkpoint-5000 la chaqueta se preservaba en el caso `replace`, en checkpoint-7000 ya se cambiaba sin pedirlo. Valorar 5000-6000 pasos o menos lr en la próxima iteración.
+
 ## Herramientas
 
 - `lpips`

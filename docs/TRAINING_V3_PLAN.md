@@ -573,10 +573,10 @@ v3 (o la versión que quede adoptada) esté estabilizada por uso real del demo.
 
 ## 11. Notas de seguimiento
 
-- Fecha de aprobación del plan: __________________
+- Fecha de aprobación del plan: ejecutado el 2026-07-28
 - Fallos críticos confirmados: `remove his glasses`, `replace the red cap with a blue beanie`
 - Dataset facial añadido: Instruct-CelebA submuestreado a ~20k ejemplos
-- Coste real del run: __________________
-- Métricas finales (LPIPS / CLIP): __________________
-- Panel quitar/reemplazar en retratos: __________________
-- Decisión final (adoptar v3 / conservar v2): __________________
+- Coste real del run: ~11 h de RTX 4090 en Vast.ai (preparación + 7 h 11 min de run + evaluación), dentro del techo de $20
+- Métricas finales (LPIPS / CLIP): v3 0.2329 / 0.2511 — v2 0.2405 / 0.2509 — base 0.3046 / 0.2512 (528 ejemplos a 512 px, misma corrida)
+- Panel quitar/reemplazar en retratos: **suspenso** — `remove his glasses` ❌ 0/2 (sustituye la escena), `make the background light blue` ❌ 0/2 (elimina al sujeto, regresión frente a v2); `add a black hat` ✅ 2/2, `make his jacket bright yellow` ✅ 2/2
+- Decisión final (adoptar v3 / conservar v2): **conservar v2 (rollback, §10.2)** — 2026-07-28

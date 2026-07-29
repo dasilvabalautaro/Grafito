@@ -2,6 +2,25 @@
 
 Todas las actualizaciones importantes del proyecto se registran aquí.
 
+## [Sin publicar] — 2026-07-28
+
+### Añadido
+
+- Checkpoint v3 `models/checkpoints/grafito-magicbrush-v3` (10000 pasos a 512 px desde v2, mezcla v3 de 27098 ejemplos con Instruct-CelebA, 7 h 11 min en RTX 4090 de Vast.ai). Descargado y verificado en local (MPS, edición correcta).
+- Resultados v3 en `docs/EVALUATION.md`: LPIPS 0.2329 / CLIP 0.2511 a 512 px (v2: 0.2405 / 0.2509; base: 0.3046 / 0.2512, los tres medidos en la misma corrida de 528 ejemplos). Panel cualitativo en `outputs/panel_v3/` (6 casos × 2 seeds).
+- Decisión documentada: **rollback a v2** según `docs/TRAINING_V3_PLAN.md` §10.2. v3 mejora LPIPS pero falla el panel de retratos (`remove his glasses` sustituye la escena; `make the background light blue` elimina al sujeto, regresión frente a v2). v2 sigue en producción; v3 se conserva solo como referencia.
+
+### Cambiado
+
+- `src/scripts/prepare_magicbrush.py`: `data_files` explícitos por split (la inferencia de `data_dir` falla offline con datasets 2.18).
+- `src/scripts/prepare_instruct_celeba.py`: detección de la raíz del dataset extraído corregida (`extraction_exists` nunca encontraba el directorio).
+
+### Validado
+
+- Pod Vast.ai (RTX 4090): venv propio Python 3.10 con torch 2.2.2+cu121, 29 tests verdes, smoke de entrenamiento de 5 pasos, dataset v3 regenerado en el pod con stats idénticas al local.
+- Smokes de retrato sobre checkpoints intermedios (3000/5000/7000) durante el run: sin divergencia; se observa sobre-edición creciente con los pasos.
+- Nota operativa: los checkpoints guardados por el script de entrenamiento no incluyen `safety_checker`; hay que copiarlo del modelo base para que `from_pretrained` cargue el pipeline completo.
+
 ## [Sin publicar] — 2026-07-27
 
 ### Añadido

@@ -29,6 +29,12 @@ Dataset v3 ya generado en local: `data/processed/magicbrush_v3/`
   Requiere los 3 archivos `.zip.00x` en `data/raw/instruct_celeba/`.
   `python src/scripts/prepare_instruct_celeba.py --zip_dir data/raw/instruct_celeba --celebamask_hq_dataset v-xchen-v/celebamask_hq --output_dir data/processed/instruct_celeba --max_samples 20000 --seed 42 --keep_extracted`
   Éxito: `data/processed/instruct_celeba/stats.json` con ~19.000–20.000 ejemplos.
+  **⚠️ Corrección retroactiva (2026-07-29): este comando produjo pares rotos.**
+  El emparejamiento por índice posicional de `v-xchen-v/celebamask_hq` no
+  coincide con `face_id`; la auditoría de v4 (`outputs/audit_v3/`) demostró
+  que ~95 % de los pares son personas distintas. El comando correcto usa
+  `--celebamask_hq_dir` con `CelebA-HQ-img/` real (ver `docs/V4_RUNBOOK.md`
+  A4.1–A4.3).
 
 - [x] **A4. Mix v3**
   `python src/scripts/prepare_v3_mix.py --magicbrush_dir data/processed/magicbrush_v3_prefilter --instruct_celeba_dir data/processed/instruct_celeba --output_dir data/processed/magicbrush_v3 --person_repeat 2 --seed 42`

@@ -23,8 +23,11 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 from datasets import Dataset, DatasetDict, concatenate_datasets, load_from_disk

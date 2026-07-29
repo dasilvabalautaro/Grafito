@@ -6,8 +6,11 @@ Instruct-CelebA (CoIE) aporta pares de edición faciales a 512×512. Este script
 2. Los une en un zip único y los extrae.
 3. Recorre la estructura extraída buscando ``instruct.json``.
 4. Empareja cada imagen editada con la imagen original de CelebA-HQ
-   (por ``face_id``) usando un directorio local o el dataset de Hugging Face
-   ``v-xchen-v/celebamask_hq``.
+   **por nombre de archivo** (``<face_id>.jpg``) desde un directorio local
+   con ``CelebA-HQ-img/``. El emparejamiento por índice posicional sobre
+   datasets de Hugging Face (p. ej. ``v-xchen-v/celebamask_hq``) se eliminó:
+   la auditoría de 2026-07-29 demostró que produce pares de personas
+   distintas (ver ``docs/TRAINING_V4_PLAN.md`` §0.5).
 5. Aplica un filtro facial opcional (requiere ``opencv-python``).
 6. Submuestrea estratificado según pesos por atributo.
 7. Guarda el resultado como ``DatasetDict`` en ``data/processed/instruct_celeba``.
@@ -15,7 +18,7 @@ Instruct-CelebA (CoIE) aporta pares de edición faciales a 512×512. Este script
 Ejemplo:
     python src/scripts/prepare_instruct_celeba.py \
         --zip_dir data/raw/instruct_celeba \
-        --celebamask_hq_dataset v-xchen-v/celebamask_hq \
+        --celebamask_hq_dir data/raw/celebamask_hq/CelebA-HQ-img \
         --output_dir data/processed/instruct_celeba \
         --max_samples 20000 \
         --seed 42
@@ -27,14 +30,13 @@ import argparse
 import json
 import shutil
 import subprocess
-import sys
 import tempfile
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from datasets import Dataset, DatasetDict, concatenate_datasets, load_dataset
+from datasets import Dataset, DatasetDict, concatenate_datasets
 from PIL import Image
 
 
@@ -66,30 +68,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--celebamask_hq_dir",
         type=str,
-        default=None,
+        default="data/raw/celebamask_hq/CelebA-HQ-img",
         help=(
-            "Directorio local con CelebA-HQ-img/ (imágenes originales 512×512). "
-            "Si se proporciona, tiene prioridad sobre --celebamask_hq_dataset."
-        ),
-    )
-    parser.add_argument(
-        "--celebamask_hq_dataset",
-        type=str,
-        default="v-xchen-v/celebamask_hq",
-        help=(
-            "Dataset de Hugging Face con las imágenes originales de CelebA-HQ. "
-            "Se usa si --celebamask_hq_dir no está disponible. "
-            "Pon 'none' para desactivar la carga remota."
-        ),
-    )
-    parser.add_argument(
-        "--celebamask_hq_cache_dir",
-        type=str,
-        default=None,
-        help=(
-            "Directorio persistente para cachear los originales descargados de "
-            "--celebamask_hq_dataset. Si existe, se reutiliza; si no, se crea. "
-            "Útil para reanudar tras una interrupción."
+            "Directorio local con las imágenes originales de CelebA-HQ "
+            "nombradas <face_id>.jpg (contenido de CelebA-HQ-img/). "
+            "Obligatorio: el emparejamiento es por nombre de archivo."
         ),
     )
     parser.add_argument(
@@ -175,17 +158,28 @@ def unsplit_and_extract(parts: list[Path], extract_dir: Path) -> None:
 
     # zipfile puede fallar con zips muy grandes o con estructuras especiales;
     # usamos unzip del sistema como primera opción.
+    _extract_zip(merged_zip, extract_dir)
+
+    # El zip unido contiene a su vez un zip interior (Instruct_CelebA_Dataset.zip).
+    inner_zips = list(extract_dir.glob("*.zip"))
+    for inner in inner_zips:
+        print(f"Extrayendo zip interior {inner}...")
+        _extract_zip(inner, extract_dir)
+    print("  Extracción completada.")
+
+
+def _extract_zip(zip_path: Path, extract_dir: Path) -> None:
+    """Extrae un zip con ``unzip`` del sistema o zipfile como fallback."""
     if shutil.which("unzip"):
         subprocess.run(
-            ["unzip", "-q", "-o", str(merged_zip), "-d", str(extract_dir)],
+            ["unzip", "-q", "-o", str(zip_path), "-d", str(extract_dir)],
             check=True,
         )
     else:
         import zipfile
 
-        with zipfile.ZipFile(merged_zip, "r") as zf:
+        with zipfile.ZipFile(zip_path, "r") as zf:
             zf.extractall(extract_dir)
-    print("  Extracción completada.")
 
 
 def parse_instruct_json(path: Path) -> list[dict[str, Any]]:
@@ -356,53 +350,6 @@ def _load_and_resize(path: Path, resolution: int) -> Image.Image:
     return img
 
 
-def _cache_celebamask_hq_images(
-    dataset_name: str,
-    needed_ids: set[str],
-    resolution: int,
-    cache_dir: Path,
-) -> Path:
-    """Descarga CelebAMask-HQ y copia sólo los originales necesarios a disco.
-
-    El dataset ``v-xchen-v/celebamask_hq`` ordena las imágenes por el mismo
-    índice numérico que usa Instruct-CelebA como ``face_id``. Lo cargamos
-    completo una sola vez (queda en caché de Hugging Face) y extraemos los
-    píxeles que necesitamos, evitando el coste O(n·m) del streaming.
-    """
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    sorted_ids = sorted(needed_ids, key=int)
-    already_cached = sum(1 for face_id in sorted_ids if (cache_dir / f"{face_id}.jpg").exists())
-    print(
-        f"Descargando/cacheando originales de {dataset_name} "
-        f"({len(needed_ids)} imágenes necesarias, {already_cached} ya en caché)..."
-    )
-
-    ds = load_dataset(dataset_name, split="train", streaming=False)
-
-    written = 0
-    skipped = 0
-    for face_id in sorted_ids:
-        out_path = cache_dir / f"{face_id}.jpg"
-        if out_path.exists():
-            skipped += 1
-            continue
-
-        idx = int(face_id)
-        if idx < 0 or idx >= len(ds):
-            print(f"  face_id {face_id} fuera de rango ({len(ds)}); se omite")
-            continue
-        img = ds[idx]["image"]
-        if img.size != (resolution, resolution):
-            img = img.convert("RGB").resize((resolution, resolution), Image.LANCZOS)
-        img.save(out_path, quality=95)
-        written += 1
-        if (written + skipped) % 500 == 0:
-            print(f"  Procesadas {(written + skipped)}/{len(needed_ids)} originales")
-
-    print(f"  Originales cacheados en {cache_dir}: {written} nuevos, {skipped} reutilizados")
-    return cache_dir
-
 
 def stratified_sample(
     pairs: list[dict[str, Any]],
@@ -550,46 +497,23 @@ def _record_generator(
 
 def build_dataset_batched(
     selected: list[dict[str, Any]],
-    celebamask_hq_dir: Path | None,
-    celebamask_hq_dataset: str | None,
-    celebamask_hq_cache_dir: Path | None,
+    celebamask_hq_dir: Path,
     resolution: int,
     face_filter: bool,
     chunk_size: int = 1000,
-) -> tuple[Dataset, dict[str, Any], Path | None]:
+    max_missing_fraction: float = 0.01,
+) -> tuple[Dataset, dict[str, Any]]:
     """Construye el dataset procesando los originales en lotes para evitar OOM.
-
-    Si se proporciona ``celebamask_hq_dataset`` pero no ``celebamask_hq_dir``,
-    descarga/cachea primero los originales necesarios. El directorio de caché
-    puede ser persistente (``celebamask_hq_cache_dir``) o temporal.
 
     En lugar de ``Dataset.from_generator`` (que mostró parones de varios
     minutos al volcar shards), procesamos grupos faciales en lotes, guardamos
     cada lote en disco y concatenamos al final.
+
+    Si falta más de ``max_missing_fraction`` de los originales necesarios se
+    aborta: es señal de que el directorio de originales no corresponde a los
+    ``face_id`` de Instruct-CelebA (el fallo que envenenó el dataset v3).
     """
     needed_ids = {item["face_id"] for item in selected}
-    temp_cache_dir: Path | None = None
-    owns_cache = False
-
-    if celebamask_hq_dir is None and celebamask_hq_dataset:
-        if celebamask_hq_dataset.lower() == "none":
-            raise ValueError(
-                "Debes proporcionar --celebamask_hq-dir o --celebamask-hq-dataset."
-            )
-        if celebamask_hq_cache_dir is not None:
-            celebamask_hq_dir = celebamask_hq_cache_dir
-        else:
-            temp_cache_dir = Path(tempfile.mkdtemp(prefix="celebamask_hq_cache_"))
-            celebamask_hq_dir = temp_cache_dir
-            owns_cache = True
-        celebamask_hq_dir = _cache_celebamask_hq_images(
-            celebamask_hq_dataset, needed_ids, resolution, celebamask_hq_dir
-        )
-
-    if celebamask_hq_dir is None:
-        raise ValueError(
-            "Debes proporcionar --celebamask_hq-dir o --celebamask_hq_dataset."
-        )
 
     detector = load_face_detector() if face_filter else None
     if face_filter and detector is None:
@@ -605,10 +529,13 @@ def build_dataset_batched(
 
     print(f"Procesando {len(needed_ids)} originales en lotes de {chunk_size}...")
     processed = 0
+    missing = 0
     for face_id in sorted(needed_ids, key=int):
         original = _load_original_from_dir(face_id, celebamask_hq_dir, resolution)
         if original is None:
-            print(f"  Original no encontrado para face_id {face_id}")
+            missing += 1
+            if missing <= 5:
+                print(f"  Original no encontrado para face_id {face_id}")
             continue
 
         records, _ = _process_face_group(face_id, original, by_face_id[face_id], detector)
@@ -631,6 +558,16 @@ def build_dataset_batched(
         shard_paths.append(shard_path)
         print(f"  Guardado shard final {len(shard_paths)} con {len(chunk)} ejemplos")
 
+    missing_fraction = missing / len(needed_ids)
+    print(f"  Originales procesados: {processed}; faltantes: {missing} ({missing_fraction:.2%})")
+    if missing_fraction > max_missing_fraction:
+        shutil.rmtree(shard_dir, ignore_errors=True)
+        raise RuntimeError(
+            f"Faltan {missing}/{len(needed_ids)} originales ({missing_fraction:.1%}). "
+            "El directorio de CelebA-HQ no corresponde a los face_id de "
+            "Instruct-CelebA. Revisa --celebamask_hq_dir."
+        )
+
     if not shard_paths:
         raise RuntimeError("No se generó ningún registro. Revisa los paths de originales.")
 
@@ -643,10 +580,11 @@ def build_dataset_batched(
     stats = {
         "num_records": len(dataset),
         "num_originals_loaded": len(set(dataset["face_id"])),
+        "missing_originals": missing,
         "attributes": dict(Counter(dataset["attribute"])),
     }
 
-    return dataset, stats, temp_cache_dir if owns_cache else None
+    return dataset, stats
 
 
 def main() -> None:
@@ -687,20 +625,15 @@ def main() -> None:
     print(f"Ejemplos seleccionados tras submuestreo: {len(selected)}")
 
     # 4. Construir dataset cargando originales en lotes (evita OOM)
-    celebamask_hq_dir = Path(args.celebamask_hq_dir) if args.celebamask_hq_dir else None
-    celebamask_hq_cache_dir = (
-        Path(args.celebamask_hq_cache_dir) if args.celebamask_hq_cache_dir else None
-    )
-    train_ds, stats, temp_cache_dir = build_dataset_batched(
+    celebamask_hq_dir = Path(args.celebamask_hq_dir)
+    train_ds, stats = build_dataset_batched(
         selected,
         celebamask_hq_dir,
-        args.celebamask_hq_dataset,
-        celebamask_hq_cache_dir,
         args.resolution,
         face_filter=args.face_filter,
     )
 
-    # 6. Guardar
+    # 5. Guardar
     dataset_dict = DatasetDict({"train": train_ds})
     dataset_dict.save_to_disk(output_dir)
 
@@ -713,10 +646,6 @@ def main() -> None:
     print(f"Dataset guardado en {output_dir}")
     print(f"  Ejemplos finales: {len(train_ds)}")
     print(f"  Estadísticas: {stats_path}")
-
-    if temp_cache_dir is not None:
-        print(f"Borrando caché temporal de originales {temp_cache_dir}...")
-        shutil.rmtree(temp_cache_dir, ignore_errors=True)
 
     if not args.keep_extracted:
         print(f"Borrando extracción intermedia {extract_dir} para ahorrar espacio...")

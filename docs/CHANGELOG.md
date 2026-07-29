@@ -2,6 +2,27 @@
 
 Todas las actualizaciones importantes del proyecto se registran aquí.
 
+## [Sin publicar] — 2026-07-29
+
+### Añadido
+
+- `docs/TRAINING_V4_PLAN.md`: plan del cuarto entrenamiento. Desde v2, 6000 pasos en vez de 10000 y checkpoints cada 1000 sin límite, para evaluar 4000/5000/6000 y localizar el óptimo de conservación que los smokes de v3 sugirieron. Incluye la puerta de auditoría de datos (§0.5) que detectó el dataset v3 envenenado y su resolución: el run usa `magicbrush_v4` (Instruct-CelebA re-emparejado y auditado). Objetivo: conservar la ganancia de LPIPS de v3 sin la regresión de fondos con personas ni la sobre-edición. `remove his glasses` queda como limitación conocida, no como criterio de adopción.
+- `docs/V4_RUNBOOK.md`: procedimiento operativo de v4 (auditoría → pod → evaluación de intermedios → cierre), con paso de materialización de checkpoints de entrenamiento como pipelines cargables.
+- `src/scripts/audit_v3_data.py` + `tests/test_audit_v3_data.py`: auditoría de calidad del componente Instruct-CelebA dentro de la mezcla v3 (CLIP img-img para emparejamiento, LPIPS para magnitud de edición, CLIP texto-img para adherencia, presencia facial, control MagicBrush y láminas de contacto por atributo).
+
+### Cambiado
+
+- Limpieza de disco local: eliminado `data/raw/magicbrush` (~25 GB, ya procesado) y la caché de HuggingFace (`~/.cache/huggingface`, ~36 GB; el token de login se conservó). El dataset `data/processed/magicbrush_v3` (19 GB) y los checkpoints v1/v2/v3 permanecen intactos.
+- `src/scripts/prepare_instruct_celeba.py`: eliminado el emparejamiento por índice posicional sobre `v-xchen-v/celebamask_hq` (la causa del dataset v3 envenenado). Ahora el emparejamiento es obligatoriamente por nombre de archivo (`<face_id>.jpg`) desde `CelebA-HQ-img/` real, se extrae también el zip interior del dataset y se aborta si falta >1 % de originales.
+- `src/scripts/prepare_v3_mix.py` y `src/scripts/audit_v3_data.py`: `sys.path` corregido para ejecución directa como script.
+- `docs/V4_RUNBOOK.md`: flujo de transferencia vía Google Drive (A7 empaquetado local en `.tar`, B4/B5 descarga del pod desde Drive, C5–C7 resultados pod→Drive→local) para no quemar horas de pod en subidas caseras; Fase A4 marcada como ejecutada.
+
+### Validado
+
+- Auditoría de Instruct-CelebA ejecutada (800 pares + 200 de control, `outputs/audit_v3/`): **el emparejamiento original↔editada está sistemáticamente roto** (CLIP img-img 0.54–0.59 vs 0.94 del control; LPIPS 0.55 vs 0.11; 90–98 % de pares sospechosos en los 8 atributos; las láminas muestran personas distintas). Causa: `prepare_instruct_celeba.py` asumió que el índice posicional de `v-xchen-v/celebamask_hq` coincide con `face_id`. Explica retroactivamente el fallo de v3 ("sustituir una persona por otra").
+- Re-emparejamiento completado (2026-07-29): originales reales de `liusq/CelebAMask-HQ` (`CelebA-HQ-img/`, 30.000 imágenes con nombre), 19.755 ejemplos procesados con **0 originales faltantes**. Nueva mezcla `data/processed/magicbrush_v4/` (27.400 train / 528 validation).
+- Re-auditoría de la mezcla v4 (`outputs/audit_v4/`): **puerta SUPERADA** — CLIP img-img 0.85–0.96 (control 0.95), 0 % de mal emparejamiento (gender 9 %, esperable por la propia edición), LPIPS 0.02–0.14, 0 % de reemplazo de escena. Láminas verificadas visualmente. El dataset v4 queda aprobado para el run.
+
 ## [Sin publicar] — 2026-07-28
 
 ### Añadido

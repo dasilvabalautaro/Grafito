@@ -12,6 +12,9 @@ models/checkpoints/
 outputs/
 assets/private/
 
+# Artefactos de transferencia (Drive)
+*.tar
+
 # Jupyter
 .ipynb_checkpoints/
 
